@@ -6,14 +6,16 @@ package modbus.comm0;
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
+import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
+import com.digitalpetri.modbus.responses.WriteMultipleRegistersResponse;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.util.ReferenceCountUtil;
 
 import java.util.concurrent.CompletableFuture;
 
 public class App {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         ModbusTcpMasterConfig cfg = new ModbusTcpMasterConfig.Builder("192.168.1.244").setPort(502).build();
         ModbusTcpMaster master = new ModbusTcpMaster(cfg);
 
@@ -23,12 +25,18 @@ public class App {
                 .sendRequest(new ReadHoldingRegistersRequest(0, 10), 0);
 
         future.thenAccept(response -> {
-            System.out.println("future thenAccept");
-
-            System.out.println("Response: " + ByteBufUtil.hexDump(response.getRegisters()));
+            System.out.println(ByteBufUtil.prettyHexDump(response.getRegisters()));
 
             ReferenceCountUtil.release(response);
-        });
-        Thread.sleep(10000);
+        }).join();
+
+        byte[] b = new byte[]{0x10, 0x11, 0x12, 0x13};
+        WriteMultipleRegistersRequest req = new WriteMultipleRegistersRequest(0, 2, b);
+
+        CompletableFuture<WriteMultipleRegistersResponse> wfuture = master
+                .sendRequest(req, 0);
+        wfuture.thenRun(() -> {
+//            ReferenceCountUtil.release(req);
+        }).join();
     }
 }
