@@ -28,10 +28,7 @@ public class App {
             System.out.println("Response: " + ByteBufUtil.hexDump(response.getRegisters()));
 
             ReferenceCountUtil.release(response);
-
-            master.disconnect();
         });
-
-        Thread.sleep(100000);
+        Thread.sleep(10000);
     }
 }
