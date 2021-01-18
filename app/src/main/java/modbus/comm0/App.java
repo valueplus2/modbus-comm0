@@ -19,8 +19,8 @@ public class App {
 
         master.connect();
 
-        CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(0, 10), 0);
+        CompletableFuture<ReadHoldingRegistersResponse> future = master
+                .sendRequest(new ReadHoldingRegistersRequest(0, 10), 0);
 
         future.thenAccept(response -> {
             System.out.println("future thenAccept");

@@ -6,3 +6,9 @@ build
 
 # ignore idea project-specific dir
 .idea
+
+# ignore vscode generated files
+.settings
+.project
+.classpath
+app/bin
