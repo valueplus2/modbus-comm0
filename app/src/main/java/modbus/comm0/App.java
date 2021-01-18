@@ -3,12 +3,35 @@
  */
 package modbus.comm0;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import com.digitalpetri.modbus.master.ModbusTcpMaster;
+import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
+import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
+import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.util.ReferenceCountUtil;
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+import java.util.concurrent.CompletableFuture;
+
+public class App {
+    public static void main(String[] args) throws InterruptedException {
+        ModbusTcpMasterConfig cfg = new ModbusTcpMasterConfig.Builder("192.168.1.244").setPort(502).build();
+        ModbusTcpMaster master = new ModbusTcpMaster(cfg);
+
+        master.connect();
+
+        CompletableFuture<ReadHoldingRegistersResponse> future =
+                master.sendRequest(new ReadHoldingRegistersRequest(0, 10), 0);
+
+        future.thenAccept(response -> {
+            System.out.println("future thenAccept");
+
+            System.out.println("Response: " + ByteBufUtil.hexDump(response.getRegisters()));
+
+            ReferenceCountUtil.release(response);
+
+            master.disconnect();
+        });
+
+        Thread.sleep(100000);
     }
 }
