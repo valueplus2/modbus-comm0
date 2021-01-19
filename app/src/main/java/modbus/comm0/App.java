@@ -6,37 +6,50 @@ package modbus.comm0;
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
-import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
-import com.digitalpetri.modbus.responses.WriteMultipleRegistersResponse;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
-import io.netty.util.ReferenceCountUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class App {
-    public static void main(String[] args) {
-        ModbusTcpMasterConfig cfg = new ModbusTcpMasterConfig.Builder("192.168.1.244").setPort(502).build();
-        ModbusTcpMaster master = new ModbusTcpMaster(cfg);
+    public static void main(String[] args) throws InterruptedException {
+        Logger logger = LogManager.getLogger();
+        Thread t = new Thread(() -> {
+            ModbusTcpMasterConfig cfg = new ModbusTcpMasterConfig.Builder("192.168.1.244")
+                    .setPort(502)
+                    .build();
+            ModbusTcpMaster master = new ModbusTcpMaster(cfg);
+            master.connect();
+            try {
+                int n = 0, max = 10;
+                while (n < max) {
+                    CompletableFuture<ReadHoldingRegistersResponse> future = master
+                            .sendRequest(new ReadHoldingRegistersRequest(0, 5), 0);
+                    ReadHoldingRegistersResponse response = future.get();
+                    ByteBuf buf = response.getRegisters();
+                    System.out.println(ByteBufUtil.hexDump(buf));
+                    Thread.sleep(500);
+                    n++;
+                }
+                Future<?> shutdownFuture = master.disconnect();
+                shutdownFuture.get();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        t.start();
+        t.join();
+        logger.error("Hello");
 
-        master.connect();
-
-        CompletableFuture<ReadHoldingRegistersResponse> future = master
-                .sendRequest(new ReadHoldingRegistersRequest(0, 10), 0);
-
-        future.thenAccept(response -> {
-            System.out.println(ByteBufUtil.prettyHexDump(response.getRegisters()));
-
-            ReferenceCountUtil.release(response);
-        }).join();
-
-        byte[] b = new byte[]{0x10, 0x11, 0x12, 0x13};
-        WriteMultipleRegistersRequest req = new WriteMultipleRegistersRequest(0, 2, b);
-
-        CompletableFuture<WriteMultipleRegistersResponse> wfuture = master
-                .sendRequest(req, 0);
-        wfuture.thenRun(() -> {
-//            ReferenceCountUtil.release(req);
-        }).join();
+//        future.thenAccept(response -> {
+//            System.out.println(ByteBufUtil.hexDump(response.getRegisters()));
+//
+//            ReferenceCountUtil.release(response);
+//        }).join();
     }
 }

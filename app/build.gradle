@@ -20,16 +20,16 @@ dependencies {
     // Use JUnit test framework.
     testImplementation 'junit:junit:4.13'
 
-    // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
 
     implementation group: 'com.digitalpetri.modbus', name: 'modbus-master-tcp', version: '1.2.0'
 
-//    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '2.0.0-alpha1'
-
-    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
-
     runtimeOnly group: 'io.netty', name: 'netty-handler', version: '4.1.48.Final'
+
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+    /* slf4j log4j2 binding. choose to use log4j2 solely */
+//    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.0'
 }
 
 application {
