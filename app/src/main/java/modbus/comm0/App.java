@@ -17,7 +17,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class App {
+    static void printf(String format, Object... args) {
+        System.out.printf(format, args);
+    }
+
     public static void main(String[] args) throws InterruptedException {
+        printf("%-15s%-10.2f\n", "压力(kpa):", 43.4);
         Logger logger = LogManager.getLogger();
         Thread t = new Thread(() -> {
             ModbusTcpMasterConfig cfg = new ModbusTcpMasterConfig.Builder("192.168.1.244")
@@ -45,11 +50,5 @@ public class App {
         t.start();
         t.join();
         logger.error("Hello");
-
-//        future.thenAccept(response -> {
-//            System.out.println(ByteBufUtil.hexDump(response.getRegisters()));
-//
-//            ReferenceCountUtil.release(response);
-//        }).join();
     }
 }
